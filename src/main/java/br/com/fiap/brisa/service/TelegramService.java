@@ -86,8 +86,13 @@ public class TelegramService {
     }
 
     private JsonNode chamar(String metodo, Map<String, Object> corpo) {
-        return http.post().uri("https://api.telegram.org/bot{t}/{m}", token, metodo)
-                .contentType(MediaType.APPLICATION_JSON).body(corpo)
-                .retrieve().body(JsonNode.class);
+        try {
+            return http.post().uri("https://api.telegram.org/bot{t}/{m}", token, metodo)
+                    .contentType(MediaType.APPLICATION_JSON).body(corpo)
+                    .retrieve().body(JsonNode.class);
+        } catch (RuntimeException e) {
+            // A mensagem original traz a URL com o token: nunca deixar isso chegar ao log.
+            throw new IllegalStateException(String.valueOf(e.getMessage()).replace(token, "<token>"));
+        }
     }
 }

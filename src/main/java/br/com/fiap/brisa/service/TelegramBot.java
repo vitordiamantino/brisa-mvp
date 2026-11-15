@@ -73,12 +73,17 @@ public class TelegramBot {
             String[] partes = q.path("data").asText("").split(":");
             if (partes.length != 2) return;
             long checkInId = Long.parseLong(partes[1]);
-            String resposta = switch (partes[0]) {
-                case "bem" -> cuidado.responder(checkInId, true, " pelo Telegram");
-                case "ajuda" -> cuidado.responder(checkInId, false, " pelo Telegram");
-                case "conf" -> cuidado.confirmarPorContato(checkInId, chatId, nomeDoContato(chatId));
-                default -> null;
-            };
+            String resposta;
+            try {
+                resposta = switch (partes[0]) {
+                    case "bem" -> cuidado.responder(checkInId, true, " pelo Telegram");
+                    case "ajuda" -> cuidado.responder(checkInId, false, " pelo Telegram");
+                    case "conf" -> cuidado.confirmarPorContato(checkInId, chatId, nomeDoContato(chatId));
+                    default -> null;
+                };
+            } catch (java.util.NoSuchElementException e) {
+                resposta = "Essa mensagem é antiga e já não vale. Aguarde o próximo check-in.";
+            }
             if (resposta != null) {
                 telegram.responderBotao(q.path("id").asText(), "Recebido");
                 telegram.removerBotoes(chatId, messageId);
