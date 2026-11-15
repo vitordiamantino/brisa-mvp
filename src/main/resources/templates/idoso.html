@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragmentos :: head(${i.nome})}"></head>
+<body>
+<header th:replace="~{fragmentos :: topo}"></header>
+<main class="conteudo">
+  <div th:replace="~{fragmentos :: avisos}"></div>
+
+  <section class="cabeca-idoso">
+    <div>
+      <a class="voltar" th:href="@{/}">Voltar ao painel</a>
+      <h1 th:text="${i.nome}">Dona Lurdes</h1>
+      <p class="sub" th:text="${i.idade} + ' anos · ' + ${i.bairro ?: ''} + ' · CEP ' + ${i.cep}">78 anos</p>
+    </div>
+    <div class="irt-grande" th:classappend="${i.nivel.css}">
+      <b th:text="${i.irt != null} ? ${#numbers.formatDecimal(i.irt,1,1,'COMMA')} : '-'">73,3</b>
+      <span th:text="'IRT · ' + ${i.nivel.rotulo}">IRT · Laranja</span>
+    </div>
+  </section>
+
+  <div class="grade">
+    <section class="cartao">
+      <h2>Por que o risco está assim</h2>
+      <p class="formula">IRT = 0,40 × Calor previsto + 0,25 × Calor em casa + 0,25 × Vulnerabilidade + 0,10 × Histórico</p>
+      <div class="barra"><span>Calor previsto</span><i th:style="'width:' + ${i.componenteCalor ?: 0} + '%'"></i><b th:text="${i.componenteCalor}">79</b></div>
+      <div class="barra"><span>Calor em casa</span><i th:style="'width:' + ${i.componenteCasa ?: 0} + '%'"></i><b th:text="${i.componenteCasa}">88</b></div>
+      <div class="barra"><span>Vulnerabilidade</span><i th:style="'width:' + ${i.componenteVulnerabilidade ?: 0} + '%'"></i><b th:text="${i.componenteVulnerabilidade}">75</b></div>
+      <div class="barra"><span>Histórico</span><i th:style="'width:' + ${i.componenteHistorico ?: 0} + '%'"></i><b th:text="${i.componenteHistorico}">10</b></div>
+      <div class="temps">
+        <div><small>Sensação na rua (previsão)</small><b th:text="${i.sensacaoPrevista != null} ? ${#numbers.formatDecimal(i.sensacaoPrevista,1,1,'COMMA')} + ' °C' : '-'">37 °C</b></div>
+        <div><small>Dentro de casa (sensor)</small><b th:text="${i.temperaturaCasa != null} ? ${#numbers.formatDecimal(i.temperaturaCasa,1,1,'COMMA')} + ' °C' : 'sem leitura'">33 °C</b></div>
+      </div>
+      <p class="protocolo" th:text="'Protocolo do nível ' + ${i.nivel.rotulo} + ': ' + ${i.nivel.protocolo}">protocolo</p>
+      <form method="post" th:action="@{/idosos/{id}/sensor(id=${i.id})}" class="linha-form">
+        <label>Simular leitura do sensor (°C) <input type="number" step="0.1" min="10" max="50" name="temperatura" required></label>
+        <button class="botao-sec">Enviar leitura</button>
+      </form>
+      <form method="post" th:action="@{/idosos/{id}/recalcular(id=${i.id})}"><button class="botao-sec">Recalcular IRT</button></form>
+    </section>
+
+    <section class="cartao">
+      <h2>Check-in</h2>
+      <div th:if="${ultimo != null}" class="checkin" th:classappend="${ultimo.aberto()} ? 'atencao' : ''">
+        <p>Último envio: <b th:text="${#temporals.format(ultimo.enviadoEm, 'dd/MM HH:mm:ss')}">10:00</b></p>
+        <p>Situação: <b th:text="${ultimo.status.name() == 'AGUARDANDO'} ? 'Aguardando resposta' : (${ultimo.status.name() == 'ESTOU_BEM'} ? 'Estou bem' : (${ultimo.status.name() == 'PEDIU_AJUDA'} ? 'Pediu ajuda' : 'Confirmado por ' + ${ultimo.resolvidoPor}))">Aguardando</b></p>
+        <div th:if="${ultimo.aberto()}" class="botoes">
+          <form method="post" th:action="@{/idosos/{id}/responder(id=${i.id})}">
+            <input type="hidden" name="checkIn" th:value="${ultimo.id}"><input type="hidden" name="bem" value="true">
+            <button class="botao-sec">Simular "Estou bem"</button>
+          </form>
+          <form method="post" th:action="@{/idosos/{id}/responder(id=${i.id})}">
+            <input type="hidden" name="checkIn" th:value="${ultimo.id}"><input type="hidden" name="bem" value="false">
+            <button class="botao-perigo">Simular "Preciso de ajuda"</button>
+          </form>
+        </div>
+      </div>
+      <p th:if="${ultimo == null}">Nenhum check-in enviado ainda.</p>
+      <form method="post" th:action="@{/idosos/{id}/checkin(id=${i.id})}"><button class="botao">Enviar check-in agora</button></form>
+
+      <h2>Rede de cuidado</h2>
+      <ul class="rede">
+        <li>
+          <b th:text="${i.nome}">Dona Lurdes</b> <small>(idoso)</small>
+          <span th:if="${i.telegramChatId != null}" class="ok">Telegram vinculado</span>
+          <a th:if="${i.telegramChatId == null and bot != null}" th:href="'https://t.me/' + ${bot} + '?start=idoso-' + ${i.id}" target="_blank">convite do Telegram</a>
+        </li>
+        <li th:each="c : ${i.contatos}">
+          <b th:text="${c.ordem} + '. ' + ${c.nome}">Carla</b> <small th:text="'(' + ${c.papel} + ')'">(Família)</small>
+          <span th:if="${c.telegramChatId != null}" class="ok">Telegram vinculado</span>
+          <a th:if="${c.telegramChatId == null and bot != null}" th:href="'https://t.me/' + ${bot} + '?start=contato-' + ${c.id}" target="_blank">convite do Telegram</a>
+        </li>
+      </ul>
+      <p class="sub">Sem resposta: lembrete aos 30 min, 1º contato aos 60 min e o próximo a cada 30 min.
+        Na demonstração, 1 minuto do protocolo dura 1 segundo.</p>
+    </section>
+  </div>
+
+  <section class="cartao">
+    <h2>O que aconteceu</h2>
+    <ul class="linha-tempo">
+      <li th:each="e : ${eventos}">
+        <time th:text="${#temporals.format(e.quando, 'dd/MM HH:mm:ss')}">10:00</time>
+        <span class="tipo" th:text="${e.tipo}">CHECKIN</span>
+        <span th:text="${e.descricao}">texto</span>
+      </li>
+    </ul>
+  </section>
+</main>
+<script>
+  setInterval(function () {
+    var el = document.activeElement;
+    if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'BUTTON')) location.reload();
+  }, 5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:replace="~{fragmentos :: head('Painel')}"></head>
+<body>
+<header th:replace="~{fragmentos :: topo}"></header>
+<main class="conteudo">
+  <div th:replace="~{fragmentos :: avisos}"></div>
+
+  <section class="faixa-clima">
+    <div>
+      <h1>Quem precisa de atenção agora</h1>
+      <p class="sub">UBS Itaquera · atualiza sozinho a cada 10 segundos</p>
+    </div>
+    <div class="clima">
+      <span>Previsão real de hoje:
+        <b th:text="${previsaoReal != null} ? ${#numbers.formatDecimal(previsaoReal,1,1,'COMMA')} + ' °C de sensação' : 'ainda não consultada'">--</b></span>
+      <span th:if="${ondaSimulada != null}" class="tag-onda">Onda simulada: <b th:text="${ondaSimulada} + ' °C'">38</b></span>
+      <form method="post" th:action="@{/onda}" class="form-onda">
+        <input type="number" step="0.5" min="20" max="50" name="sensacao" placeholder="°C" aria-label="Sensação simulada">
+        <button type="submit" class="botao-sec">Simular onda</button>
+      </form>
+      <form method="post" th:action="@{/onda}" th:if="${ondaSimulada != null}"><button class="botao-sec">Usar previsão real</button></form>
+      <form method="post" th:action="@{/ciclo}"><button class="botao">Rodar o ciclo das 6h</button></form>
+    </div>
+  </section>
+
+  <section class="semaforo">
+    <div class="sinal vermelho"><b th:text="${contagem[T(br.com.fiap.brisa.model.Nivel).VERMELHO]}">0</b><span>Vermelho</span></div>
+    <div class="sinal laranja"><b th:text="${contagem[T(br.com.fiap.brisa.model.Nivel).LARANJA]}">0</b><span>Laranja</span></div>
+    <div class="sinal amarelo"><b th:text="${contagem[T(br.com.fiap.brisa.model.Nivel).AMARELO]}">0</b><span>Amarelo</span></div>
+    <div class="sinal verde"><b th:text="${contagem[T(br.com.fiap.brisa.model.Nivel).VERDE]}">0</b><span>Verde</span></div>
+    <div class="sinal neutro"><b th:text="${semResposta}">0</b><span>Sem resposta</span></div>
+    <div class="sinal neutro"><b th:text="${respondidosEm30} + '/' + ${checkinsHoje}">0/0</b><span>Responderam em 30 min hoje</span></div>
+  </section>
+
+  <section class="lista">
+    <a class="linha" th:each="l : ${linhas}" th:href="@{/idosos/{id}(id=${l.idoso.id})}"
+       th:classappend="${l.pediuAjuda} ? 'urgente' : (${l.semResposta} ? 'atencao' : '')">
+      <span class="pilula" th:classappend="${l.idoso.nivel.css}" th:text="${l.idoso.irt != null} ? ${#numbers.formatDecimal(l.idoso.irt,1,0)} : '-'">73</span>
+      <span class="quem">
+        <b th:text="${l.idoso.nome}">Dona Lurdes</b>
+        <small th:text="${l.idoso.idade} + ' anos · ' + ${l.idoso.bairro ?: 'bairro não informado'}">78 anos</small>
+      </span>
+      <span class="nivel" th:text="${l.idoso.nivel.rotulo}">Laranja</span>
+      <span class="situacao">
+        <th:block th:if="${l.ultimo == null}">Sem check-in hoje</th:block>
+        <th:block th:if="${l.pediuAjuda}"><b class="txt-urgente">Pediu ajuda</b></th:block>
+        <th:block th:if="${l.semResposta}"><b class="txt-atencao">Sem resposta desde
+          <span th:text="${#temporals.format(l.ultimo.enviadoEm, 'HH:mm:ss')}">10:00</span></b></th:block>
+        <th:block th:if="${l.ultimo != null and !l.semResposta and !l.pediuAjuda}">
+          <span th:text="${l.ultimo.status.name() == 'ESTOU_BEM'} ? 'Respondeu Estou bem' : ('Confirmado por ' + ${l.ultimo.resolvidoPor})">ok</span>
+        </th:block>
+      </span>
+      <span class="tg" th:text="${l.idoso.telegramChatId != null} ? 'Telegram' : ''"></span>
+    </a>
+  </section>
+  <p class="rodape">Dados fictícios de demonstração. O IRT organiza o cuidado e não faz diagnóstico.</p>
+  <form method="post" th:action="@{/demo/reiniciar}" onsubmit="return confirm('Apagar os check-ins e voltar aos dados iniciais?')">
+    <button class="botao-sec">Recomeçar a demonstração</button>
+  </form>
+</main>
+<script>
+  setInterval(function () {
+    var el = document.activeElement;
+    if (!el || (el.tagName !== 'INPUT' && el.tagName !== 'BUTTON')) location.reload();
+  }, 10000);
+</script>
+</body>
+</html>

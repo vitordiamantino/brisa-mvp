@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head th:fragment="head(titulo)">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${titulo} + ' · Brisa'">Brisa</title>
+  <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+  <link rel="stylesheet" th:href="@{/brisa.css}">
+</head>
+<body>
+<header th:fragment="topo" class="topo">
+  <a class="marca" th:href="@{/}"><span class="marca-ponto"></span>Brisa <small>painel da UBS</small></a>
+  <nav>
+    <a th:href="@{/}">Painel</a>
+    <a th:href="@{/idosos/novo}">Cadastrar idoso</a>
+    <a th:href="@{/api/idosos}" target="_blank">API</a>
+  </nav>
+  <span class="status-bot" th:classappend="${telegramAtivo} ? 'on' : 'off'"
+        th:text="${telegramAtivo} ? ('Telegram ativo: @' + ${bot}) : 'Telegram desligado (envios simulados)'">Telegram</span>
+</header>
+<div th:fragment="avisos">
+  <p class="aviso" th:if="${msg}" th:text="${msg}">mensagem</p>
+</div>
+</body>
+</html>
