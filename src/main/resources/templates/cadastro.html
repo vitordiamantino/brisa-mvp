@@ -30,15 +30,15 @@
     <h2>Rede de cuidado, na ordem de acionamento</h2>
     <div class="dupla">
       <label>1º contato <input type="text" th:field="*{contato1Nome}" required></label>
-      <label>Papel <select th:field="*{contato1Papel}"><option>Família</option><option>Vizinho guardião</option><option>Agente de saúde</option></select></label>
+      <label>Papel <select th:field="*{contato1Papel}"><option value="Família">Família</option><option value="Vizinho guardião">Vizinho guardião</option><option value="Agente de saúde">Agente de saúde</option></select></label>
     </div>
     <div class="dupla">
       <label>2º contato <input type="text" th:field="*{contato2Nome}"></label>
-      <label>Papel <select th:field="*{contato2Papel}"><option>Família</option><option>Vizinho guardião</option><option>Agente de saúde</option></select></label>
+      <label>Papel <select th:field="*{contato2Papel}"><option value="Família">Família</option><option value="Vizinho guardião">Vizinho guardião</option><option value="Agente de saúde">Agente de saúde</option></select></label>
     </div>
     <div class="dupla">
       <label>3º contato <input type="text" th:field="*{contato3Nome}"></label>
-      <label>Papel <select th:field="*{contato3Papel}"><option>Família</option><option>Vizinho guardião</option><option>Agente de saúde</option></select></label>
+      <label>Papel <select th:field="*{contato3Papel}"><option value="Família">Família</option><option value="Vizinho guardião">Vizinho guardião</option><option value="Agente de saúde">Agente de saúde</option></select></label>
     </div>
 
     <label class="lgpd"><input type="checkbox" th:field="*{consentimentoLgpd}">

@@ -153,6 +153,10 @@ public class PainelController {
     @PostMapping("/idosos/{id}/sensor")
     @Transactional
     public String sensor(@PathVariable Long id, @RequestParam Double temperatura, RedirectAttributes ra) {
+        if (temperatura < -10 || temperatura > 60) {
+            ra.addFlashAttribute("msg", "Leitura recusada: " + temperatura + " °C está fora da faixa de um sensor de casa (-10 a 60 °C).");
+            return "redirect:/idosos/" + id;
+        }
         Idoso i = idosos.findById(id).orElseThrow();
         i.setTemperaturaCasa(temperatura);
         i.setLeituraCasaEm(LocalDateTime.now());
