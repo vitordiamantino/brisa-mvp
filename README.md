@@ -20,7 +20,7 @@ vizinho guardião e agente de saúde da UBS.
 | RF07 Escalonamento automático | lembrete aos 30 min, 1º contato aos 60 min, depois um contato a cada 30 min |
 | RF08 Botão Preciso de ajuda | avisa toda a rede e orienta ligar 192 |
 | RF09 Painel com semáforo | página inicial: semáforo e lista em que quem está sem resposta sobe para o topo |
-| RF10 Sensor de casa | simulado: campo na página do idoso ou `POST /api/sensor/{id}` |
+| RF10 Sensor de casa | ESP32 + DHT22 no Wokwi por MQTT (pasta `wokwi/`), `POST /api/sensor/{id}` ou campo na página do idoso |
 
 `IRT = 0,40 × Calor previsto + 0,25 × Calor em casa + 0,25 × Vulnerabilidade + 0,10 × Histórico`, com cada
 componente de 0 a 100. Os níveis são verde (0 a 39), amarelo (40 a 59), laranja (60 a 79) e vermelho (80 a 100).
@@ -29,7 +29,7 @@ O IRT organiza o cuidado e não faz diagnóstico.
 ## Tecnologias
 
 Java 21, Spring Boot 3.5 (Web, Thymeleaf, Data JPA, Validation), Oracle da FIAP, Telegram Bot API (long polling),
-Open-Meteo, BrasilAPI e JUnit 5. As estruturas de dados das aulas aparecem assim:
+Open-Meteo, BrasilAPI, MQTT (Eclipse Paho e broker público da HiveMQ), ESP32 + DHT22 no Wokwi, Docker e JUnit 5. As estruturas de dados das aulas aparecem assim:
 - o ciclo das 6h envia os check-ins por uma **fila de prioridade** (`PriorityQueue`), do maior IRT para o menor;
 - o escalonamento percorre a rede de cuidado como uma **lista ligada** (`LinkedList`).
 
@@ -44,8 +44,11 @@ Open-Meteo, BrasilAPI e JUnit 5. As estruturas de dados das aulas aparecem assim
 4. Dê dois cliques em **`rodar.cmd`**. Na primeira vez, ele baixa as dependências, o que leva alguns minutos.
 5. Quando o terminal mostrar `Started BrisaApplication`, abra **http://localhost:8080**.
 
-Na primeira execução, a Brisa cria as tabelas `BRISA_*` e os dados de demonstração: Dona Lurdes e mais quatro
-idosos de Itaquera, todos fictícios.
+Na primeira execução, a Brisa cria as tabelas `BRISA_*` e os dados de demonstração: 14 idosos de Itaquera, todos
+fictícios. A Dona Lurdes não vem pronta, porque é cadastrada ao vivo no vídeo.
+
+**Com Docker:** `docker compose up -d --build` faz o mesmo e usa o `config-local.properties` da pasta. O banco
+continua sendo o Oracle da FIAP.
 
 **Importante:** só uma máquina pode rodar a Brisa com o mesmo bot ao mesmo tempo. Se duas rodarem juntas, o
 Telegram entrega as mensagens para só uma delas.
@@ -60,10 +63,18 @@ Telegram entrega as mensagens para só uma delas.
 4. **Preciso de ajuda:** num segundo idoso, toque em "Preciso de ajuda". Toda a rede é avisada, e ele sobe para o
    topo do painel em vermelho.
 5. **Página do idoso:** o "por que o risco está assim" (os 4 componentes) e a temperatura da casa contra a da rua.
-   Simule o sensor com `34` °C e mostre o IRT subindo.
+   Suba a temperatura do DHT22 no Wokwi (abaixo) e mostre o IRT subindo.
 6. **Cadastro:** cadastre um idoso novo com CEP, saúde, telhado, rede de cuidado e consentimento LGPD.
-7. **Banco:** no SQL Developer, rode `SELECT * FROM BRISA_CHECKIN ORDER BY ENVIADO_EM DESC;` e
-   `SELECT * FROM BRISA_EVENTO ORDER BY QUANDO DESC;`.
+7. **Banco:** no SQL Developer, rode `sql/lista-da-agente.sql`, que traz quem está em laranja ou vermelho e não teve
+   contato humano hoje, ordenado pelo IRT.
+
+### Sensor no Wokwi (ESP32 + DHT22 por MQTT)
+
+Em https://wokwi.com, crie um projeto ESP32 e cole `wokwi/sketch.ino` e `wokwi/diagram.json`. No Library
+Manager, adicione `PubSubClient` e `DHT sensor library for ESPx`. Troque `IDOSO_ID` pelo id do idoso (o número da
+URL `/idosos/<id>`) e dê Play. O ESP32 publica `{"temperatura": 36.0}` em `brisa/fiap561902/casa/<id>` no broker
+`broker.hivemq.com`, e a Brisa recalcula o IRT na hora. Deixe a aba do Wokwi visível: em segundo plano, o navegador
+reduz a simulação.
 
 ### Vincular o Telegram (uma vez)
 
@@ -82,4 +93,5 @@ Ao rodar de novo, a Brisa recria tudo com os dados de demonstração.
 ## API REST
 
 - `GET /api/idosos`: risco de todos, do maior IRT para o menor.
-- `POST /api/sensor/{id}` com `{"temperatura": 33.4}`: leitura do sensor de casa, o mesmo contrato que o ESP32 usaria.
+- `POST /api/sensor/{id}` com `{"temperatura": 33.4}`: leitura do sensor de casa, com o mesmo payload que o ESP32
+  publica por MQTT.

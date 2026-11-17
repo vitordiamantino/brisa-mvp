@@ -77,6 +77,41 @@ public class CuidadoService {
         return enviados;
     }
 
+    /** Laranja: check-ins às 10h, 14h e 17h. */
+    @Scheduled(cron = "0 0 10,14,17 * * *", zone = "America/Sao_Paulo")
+    @Transactional
+    public void checkInsDoLaranja() {
+        checkInsDoNivel(Nivel.LARANJA);
+    }
+
+    /** Vermelho: check-in a cada 2h, das 8h às 20h. */
+    @Scheduled(cron = "0 0 8-20/2 * * *", zone = "America/Sao_Paulo")
+    @Transactional
+    public void checkInsDoVermelho() {
+        checkInsDoNivel(Nivel.VERMELHO);
+    }
+
+    private void checkInsDoNivel(Nivel nivel) {
+        for (Idoso i : idosos.findAll()) if (i.getNivel() == nivel) enviarCheckIn(i);
+    }
+
+    public static boolean temperaturaValida(Double t) {
+        return t != null && t >= -10 && t <= 60;
+    }
+
+    /** Leitura do sensor de casa (formulário, API ou MQTT): grava, recalcula o IRT e registra na linha do tempo. */
+    @Transactional
+    public Idoso leituraSensor(Long idosoId, Double temperatura, String origem) {
+        if (!temperaturaValida(temperatura)) throw new IllegalArgumentException("temperatura fora de -10 a 60 °C");
+        Idoso i = idosos.findById(idosoId).orElseThrow();
+        i.setTemperaturaCasa(temperatura);
+        i.setLeituraCasaEm(LocalDateTime.now());
+        risco.calcular(i);
+        registrar(i, "SENSOR", "Sensor da casa enviou " + temperatura + " °C " + origem + ". IRT agora " + i.getIrt()
+                + " (" + i.getNivel().getRotulo() + ").");
+        return i;
+    }
+
     @Transactional
     public void recalcular(Long idosoId) {
         Idoso i = idosos.findById(idosoId).orElseThrow();
