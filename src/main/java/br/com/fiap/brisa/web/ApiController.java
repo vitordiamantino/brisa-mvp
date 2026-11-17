@@ -3,28 +3,23 @@ package br.com.fiap.brisa.web;
 import br.com.fiap.brisa.model.Idoso;
 import br.com.fiap.brisa.repository.IdosoRepository;
 import br.com.fiap.brisa.service.CuidadoService;
-import br.com.fiap.brisa.service.RiscoService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
-/** API REST: dados do painel e entrada das leituras do sensor de casa (ESP32 + DHT22 no roadmap). */
+/** API REST: dados do painel e entrada das leituras do sensor de casa (o ESP32 + DHT22 também chega por MQTT, veja SensorMqtt). */
 @RestController
 @RequestMapping("/api")
 public class ApiController {
 
     private final IdosoRepository idosos;
-    private final RiscoService risco;
     private final CuidadoService cuidado;
 
-    public ApiController(IdosoRepository idosos, RiscoService risco, CuidadoService cuidado) {
+    public ApiController(IdosoRepository idosos, CuidadoService cuidado) {
         this.idosos = idosos;
-        this.risco = risco;
         this.cuidado = cuidado;
     }
 
@@ -43,17 +38,12 @@ public class ApiController {
 
     /** Exemplo: POST /api/sensor/1 com {"temperatura": 33.4} */
     @PostMapping("/sensor/{idosoId}")
-    @Transactional
     public ResponseEntity<Map<String, Object>> sensor(@PathVariable Long idosoId, @RequestBody LeituraSensor leitura) {
-        if (leitura == null || leitura.temperatura() == null || leitura.temperatura() < -10 || leitura.temperatura() > 60) {
+        if (leitura == null || !CuidadoService.temperaturaValida(leitura.temperatura())) {
             return ResponseEntity.badRequest().body(Map.of("erro", "temperatura inválida"));
         }
-        Idoso i = idosos.findById(idosoId).orElse(null);
-        if (i == null) return ResponseEntity.notFound().build();
-        i.setTemperaturaCasa(leitura.temperatura());
-        i.setLeituraCasaEm(LocalDateTime.now());
-        risco.calcular(i);
-        cuidado.registrar(i, "SENSOR", "Sensor da casa enviou " + leitura.temperatura() + " °C pela API. IRT agora " + i.getIrt() + ".");
+        if (!idosos.existsById(idosoId)) return ResponseEntity.notFound().build();
+        Idoso i = cuidado.leituraSensor(idosoId, leitura.temperatura(), "pela API");
         return ResponseEntity.ok(Map.of("idoso", i.getNome(), "irt", i.getIrt(), "nivel", i.getNivel().name()));
     }
 }

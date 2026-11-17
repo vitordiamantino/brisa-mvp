@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
-/** Na primeira execução (tabelas vazias), cria a UBS de demonstração: Dona Lurdes e mais quatro idosos. Dados fictícios. */
+/** Na primeira execução (tabelas vazias), cria a UBS de demonstração com 14 idosos fictícios. */
 @Component
 public class DadosDemonstracao implements CommandLineRunner {
 
@@ -61,38 +61,52 @@ public class DadosDemonstracao implements CommandLineRunner {
         }
     }
 
+    private static final String FAMILIA = "Família", VIZINHO = "Vizinho guardião", AGENTE = "Agente de saúde";
+
+    /**
+     * 14 idosos fictícios de Itaquera. A Dona Lurdes fica de fora: ela é cadastrada ao vivo no vídeo.
+     * Com a onda simulada de 37,5 °C, ficam 2 em vermelho, 6 em laranja, 4 em amarelo e 2 em verde.
+     */
     private void semear() {
-        criar("Dona Lurdes", 78, "08210-000", "Itaquera", -23.5394, -46.4566, 33.0,
-                true, true, false, false, true,
-                new Contato("Carla (filha)", "Família", 1),
-                new Contato("Seu Jorge (vizinho)", "Vizinho guardião", 2),
-                new Contato("Márcia (agente da UBS)", "Agente de saúde", 3));
-        criar("Seu Antônio", 84, "08220-000", "Itaquera", -23.5450, -46.4620, 34.5,
-                true, false, true, false, true,
-                new Contato("Rogério (filho)", "Família", 1),
-                new Contato("Dona Neusa (vizinha)", "Vizinho guardião", 2),
-                new Contato("Márcia (agente da UBS)", "Agente de saúde", 3));
-        criar("Dona Cida", 81, "08230-000", "Itaquera", -23.5330, -46.4500, 31.0,
-                true, true, false, false, false,
-                new Contato("Paula (neta)", "Família", 1),
-                new Contato("Márcia (agente da UBS)", "Agente de saúde", 2));
-        criar("Dona Maria", 71, "08240-000", "Itaquera", -23.5410, -46.4700, 29.0,
-                false, false, false, true, false,
-                new Contato("Lucas (neto)", "Família", 1),
-                new Contato("Márcia (agente da UBS)", "Agente de saúde", 2));
-        criar("Seu José", 66, "08250-000", "Itaquera", -23.5480, -46.4480, 27.0,
-                false, false, false, false, false,
-                new Contato("Ana (filha)", "Família", 1));
+        String ana = "Ana (agente da UBS)";
+        criar("Seu Antônio", 84, "08220-000", -23.5450, -46.4620, 34.5, true, true, true, false, true,
+                new Contato("Rogério (filho)", FAMILIA, 1), new Contato("Dona Neusa (vizinha)", VIZINHO, 2), new Contato(ana, AGENTE, 3));
+        criar("Dona Benedita", 88, "08225-000", -23.5420, -46.4590, 34.0, true, true, true, false, true,
+                new Contato("Sílvia (filha)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Seu Sebastião", 85, "08226-000", -23.5470, -46.4550, 33.0, true, true, false, true, true,
+                new Contato("Márcio (filho)", FAMILIA, 1), new Contato("Seu Nelson (vizinho)", VIZINHO, 2), new Contato(ana, AGENTE, 3));
+        criar("Dona Terezinha", 83, "08227-000", -23.5360, -46.4610, 33.5, true, false, true, false, false,
+                new Contato("Cláudia (filha)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Seu Raimundo", 79, "08228-000", -23.5390, -46.4680, 32.0, true, true, false, true, false,
+                new Contato("Fábio (neto)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Dona Cida", 81, "08230-000", -23.5330, -46.4500, 31.0, true, true, false, false, false,
+                new Contato("Paula (neta)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Dona Zélia", 74, "08232-000", -23.5440, -46.4520, 31.5, true, false, false, false, true,
+                new Contato("Renata (sobrinha)", FAMILIA, 1), new Contato("Seu Carlos (vizinho)", VIZINHO, 2), new Contato(ana, AGENTE, 3));
+        criar("Dona Aparecida", 76, "08234-000", -23.5380, -46.4470, 30.5, true, true, false, false, false,
+                new Contato("Juliana (filha)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Dona Maria", 71, "08240-000", -23.5410, -46.4700, 29.0, false, false, false, true, false,
+                new Contato("Lucas (neto)", FAMILIA, 1), new Contato(ana, AGENTE, 2));
+        criar("Seu Geraldo", 69, "08242-000", -23.5500, -46.4650, 30.0, false, true, false, false, false,
+                new Contato("Patrícia (filha)", FAMILIA, 1));
+        criar("Seu Osvaldo", 67, "08244-000", -23.5350, -46.4720, 28.0, false, false, false, false, false,
+                new Contato("Diego (filho)", FAMILIA, 1));
+        criar("Seu José", 66, "08250-000", -23.5480, -46.4480, 27.0, false, false, false, false, false,
+                new Contato("Ana Paula (filha)", FAMILIA, 1));
+        criar("Seu Valdir", 62, "08252-000", -23.5520, -46.4600, 26.0, false, false, false, false, false,
+                new Contato("Bruna (filha)", FAMILIA, 1));
+        criar("Dona Iracema", 64, "08254-000", -23.5310, -46.4640, 25.5, false, false, false, false, false,
+                new Contato("Tiago (neto)", FAMILIA, 1));
     }
 
-    private void criar(String nome, int idade, String cep, String bairro, double lat, double lon, double casa,
+    private void criar(String nome, int idade, String cep, double lat, double lon, double casa,
                        boolean sozinho, boolean hipertenso, boolean cardiaco, boolean diabetico, boolean telhado,
                        Contato... rede) {
         Idoso i = new Idoso();
         i.setNome(nome);
         i.setIdade(idade);
         i.setCep(cep);
-        i.setBairro(bairro);
+        i.setBairro("Itaquera");
         i.setLatitude(lat);
         i.setLongitude(lon);
         i.setTemperaturaCasa(casa);

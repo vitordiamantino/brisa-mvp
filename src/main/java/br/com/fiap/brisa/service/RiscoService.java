@@ -3,9 +3,12 @@ package br.com.fiap.brisa.service;
 import br.com.fiap.brisa.model.Idoso;
 import br.com.fiap.brisa.model.Nivel;
 import br.com.fiap.brisa.repository.CheckInRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 /**
  * Motor de risco: IRT = 0,40·C + 0,25·T_int + 0,25·V + 0,10·H, cada componente de 0 a 100.
@@ -13,6 +16,8 @@ import java.time.LocalDateTime;
  */
 @Service
 public class RiscoService {
+
+    private static final Logger log = LoggerFactory.getLogger(RiscoService.class);
 
     private final ClimaService clima;
     private final CheckInRepository checkIns;
@@ -69,6 +74,8 @@ public class RiscoService {
         i.setIrt(valor);
         i.setNivel(Nivel.de(valor));
         i.setRiscoCalculadoEm(LocalDateTime.now());
+        log.info(String.format(Locale.ROOT, "IRT %s: calor %.0f | casa %.0f | vulnerabilidade %.0f | histórico %.0f = %.1f (%s). Protocolo: %s",
+                i.getNome(), c, t, v, h, valor, i.getNivel().getRotulo(), i.getNivel().getProtocolo()));
     }
 
     private static double escala(double valor, double min, double max) {

@@ -1,0 +1,10 @@
+# O banco é o Oracle da FIAP (remoto). As credenciais e o token vêm do config-local.properties, que não vai para o Git.
+services:
+  brisa:
+    build: .
+    container_name: brisa
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config-local.properties:/app/config-local.properties:ro
+    restart: unless-stopped
